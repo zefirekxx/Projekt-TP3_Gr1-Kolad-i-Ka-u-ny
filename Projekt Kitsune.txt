@@ -1,102 +1,106 @@
 //SklepApp.java
-import sklep.Fantasy;
-import sklep.Seinen;
+import sklep.*;
 import java.util.Scanner;
 
 public class SklepApp {
-    public static void main(String[] args) {
+    public static void main(String[] args){
         Scanner scanner = new Scanner(System.in);
-        sklep.Koszyk koszyk = new sklep.Koszyk();
+        Koszyk koszyk = new Koszyk();
 
-        System.out.println("Witaj w KITSUNE!");
-        System.out.println("Wybierz kategorię Mang:");
-        System.out.println("1 - Thriller, 2 - Seinen, 3 - Fantasy");
+        System.out.println("Witaj w sklepie KITSUNE!");
 
-        int wybor = scanner.nextInt();
-        sklep.Kategoria kategoria = null;
+        while(true){
+            System.out.println("\nWybierz kategorię Mang:");
+            System.out.println("1 - Thriller");
+            System.out.println("2 - Seinen");
+            System.out.println("3 - Fantasy");
+            System.out.println("4 - Przejdź do koszyka (podsumowanie)");
 
-        switch (wybor) {
-            case 1: kategoria = new sklep.Thriller(); break;
-            case 2: kategoria = new Seinen(); break;
-            case 3: kategoria = new Fantasy(); break;
-            default:
-                System.out.println("Nieznana kategoria.");
-                return;
-        }
+            int wybor = scanner.nextInt();
+            scanner.nextLine();
 
-        kategoria.pokazProdukty();
+            KategoriaBazowa kategoria = null;
 
-        System.out.println("Podaj nazwę produktu, aby dodać do koszyka (lub wpisz 'koniec'):");
-        while (true) {
-            String produkt = scanner.next();
-            if (produkt.equalsIgnoreCase("koniec")) break;
-            koszyk.dodajProdukt(produkt);
-        }
+            switch(wybor){
+                case 1: kategoria = new Thriller(); break;
+                case 2: kategoria = new Seinen(); break;
+                case 3: kategoria = new Fantasy(); break;
+                case 4:
+                    koszyk.pokazKoszyk();
+                    System.out.println("Dziękujemy za zakupy!");
+                    return;
+                default:
+                    System.out.println("Nieznana kategoria.");
+                    continue;
+            }
+            kategoria.opiszKategorie();
+            kategoria.pokazProdukty();
 
-        koszyk.pokazKoszyk();
-        System.out.println("Dziękujemy za zakupy!");
-    }
-}
+            while(true){
+                System.out.println("\nWpisz numer mangi, aby dodać do koszyka,");
+                System.out.println("wpisz 0, aby wrócić do wyboru kategorii,");
+                System.out.println("lub wpisz 'koniec', aby przejść do koszyka:");
 
-//Thriller.java
-package sklep;
+                String input = scanner.nextLine();
 
-public class Thriller implements sklep.Kategoria {
-    @Override
-    public void pokazProdukty() {
-        System.out.println("Thriller: Chainsaw_man, Tokyo_Ghoul, Kakegurui, Jujutsu_Kaisen");
-    }
-}
+                if(input.equalsIgnoreCase("koniec")){
+                    koszyk.pokazKoszyk();
+                    System.out.println("Dziękujemy za zakupy!");
+                    return;
+                }
+                if(input.equals("0")) break;
 
-//Ceny.java
-package sklep;
-
-public class Ceny {
-    public double cenaProduktu(String nazwa) {
-        switch (nazwa.toLowerCase()) {
-            //thriller
-            case "Chainsaw_man": return 24.99;
-            case "Tokyo_Ghoul": return 30;
-            case "Kakegurui": return 19;
-            case "Jujutsu_Kaisen": return 24;
-            //seinen
-            case "GOODNIGHT_PUNPUN": return 34;
-            case "The_Apothecary_Diaries": return 40;
-            case "Love_is_War": return 15;
-            case "JOJO's_Bizarre_Adventure": return 50;
-            //fantasy
-            case "Gachiakuta": return 25;
-            case "Dandadan": return 21.99;
-            case "Frieren_Beyond_Journey's_End": return 30.99;
-            case "Berserk": return 35;
-            case "Call_of_the_night": return 25;
-
-            default: return 0.0;
+                try{
+                    int numer = Integer.parseInt(input);
+                    String produkt = kategoria.pobierzPoNumerze(numer);
+                    if(produkt != null){
+                        koszyk.dodajProdukt(produkt);
+                    }else{
+                        System.out.println("Nie ma takiego numeru produktu.");
+                    }
+                }catch(NumberFormatException e){
+                    System.out.println("Podaj numer lub 'koniec'.");
+                }
+            }
         }
     }
 }
 
-//Fantasy.java
+//Kategoria.java
 package sklep;
 
-public class Fantasy implements sklep.Kategoria {
-    @Override
-    public void pokazProdukty() {
-        System.out.println("Fantasy: Gachiakuta, ");
-        System.out.println("Frieren Beyond Journey's End");
-        System.out.println("Berserk");
-        System.out.println("Call_of_the_night");
-        System.out.println("Dandadan");
-    }
+public interface Kategoria {
+    void pokazProdukty();
+    String pobierzPoNumerze(int numer);
 }
 
-//Seinen.java
+
+//KategoriaBazowa.java
 package sklep;
 
-public class Seinen implements sklep.Kategoria {
+import java.util.ArrayList;
+import java.util.List;
+
+public abstract class KategoriaBazowa implements Kategoria{
+    protected List<String> produkty = new ArrayList<>();
+
     @Override
-    public void pokazProdukty() {
-        System.out.println("Seinen: GOODNIGHT_PUNPUN, The_Apothecary_Diaries, Love_is_War, JOJO's_Bizarre_Adventure");
+    public void pokazProdukty(){
+        System.out.println("\nDostępne mangi:");
+        for (int i = 0; i < produkty.size(); i++){
+            System.out.println((i + 1) + " - " + produkty.get(i));
+        }
+    }
+
+    @Override
+    public String pobierzPoNumerze(int numer){
+        if(numer > 0 && numer <= produkty.size()){
+            return produkty.get(numer - 1);
+        }
+        return null;
+    }
+    public void opiszKategorie(){
+        System.out.println("Brak opisu dla tej kategorii.");
     }
 }
 
@@ -106,17 +110,22 @@ package sklep;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Koszyk {
+public class Koszyk{
     private List<String> produkty = new ArrayList<>();
-    private sklep.Ceny ceny = new sklep.Ceny();
+    private Ceny ceny = new Ceny();
 
-    public void dodajProdukt(String nazwa) {
+    public void dodajProdukt(String nazwa){
         produkty.add(nazwa);
         System.out.println(nazwa + " dodano do koszyka.");
     }
 
-    public void pokazKoszyk() {
-        System.out.println("Zawartość koszyka:");
+    public void pokazKoszyk(){
+        if (produkty.isEmpty()) {
+            System.out.println("\nKoszyk jest pusty!");
+            return;
+        }
+
+        System.out.println("\nZawartość koszyka:");
         double suma = 0;
         for (String p : produkty) {
             double cena = ceny.cenaProduktu(p);
@@ -127,10 +136,90 @@ public class Koszyk {
     }
 }
 
-//Kategoria.java
+//Ceny.java
 package sklep;
 
-public interface Kategoria {
-    void pokazProdukty();
+public class Ceny {
+    public double cenaProduktu(String nazwa){
+        switch(nazwa.toLowerCase()){
+            // Thriller
+            case "chainsaw_man": return 24.99;
+            case "tokyo_ghoul": return 30.00;
+            case "kakegurui": return 19.00;
+            case "jujutsu_kaisen": return 24.00;
+
+            // Seinen
+            case "goodnight_punpun": return 34.00;
+            case "the_apothecary_diaries": return 40.00;
+            case "love_is_war": return 15.00;
+            case "jojo's_bizarre_adventure": return 50.00;
+
+            // Fantasy
+            case "gachiakuta": return 25.00;
+            case "dandadan": return 21.99;
+            case "frieren_beyond_journey's_end": return 30.99;
+            case "berserk": return 35.00;
+            case "call_of_the_night": return 25.00;
+
+            default: return 0.0;
+        }
+    }
+}
+
+
+//Thriller.java
+package sklep;
+
+public class Thriller extends KategoriaBazowa {
+
+    public Thriller() {
+        produkty.add("Chainsaw_man");
+        produkty.add("Tokyo_Ghoul");
+        produkty.add("Kakegurui");
+        produkty.add("Jujutsu_Kaisen");
+    }
+    public void opiszKategorie(){
+        System.out.println("Kategoria Thriller: ");
+        System.out.println("Thrillery to mroczne, pełne napięcia historie,");
+        System.out.println("często z elementami akcji i psychologii.");
+        System.out.println("W tej kategorii znajdziesz serie, które trzymają w napięciu.");
+    }
+}
+
+//Fantasy.java
+package sklep;
+
+public class Fantasy extends KategoriaBazowa {
+    public Fantasy(){
+        produkty.add("Gachiakuta");
+        produkty.add("Dandadan");
+        produkty.add("Frieren_Beyond_Journey's_End");
+        produkty.add("Berserk");
+        produkty.add("Call_of_the_Night");
+    }
+    public void opiszKategorie(){
+        System.out.println("Kategoria Fantasy: ");
+        System.out.println("Fantasy to świat magii, przygód i niezwykłych bohaterów,");
+        System.out.println("pełen potworów i epickich opowieści!");
+        System.out.println("Idealne dla fanów niesamowitych światów i magii.");
+    }
+}
+
+//Seinen.java
+package sklep;
+
+public class Seinen extends KategoriaBazowa {
+    public Seinen(){
+        produkty.add("Goodnight_Punpun");
+        produkty.add("The_Apothecary_Diaries");
+        produkty.add("Love_is_War");
+        produkty.add("Jojo's_Bizarre_Adventure");
+    }
+    public void opiszKategorie() {
+        System.out.println("Kategoria Seinen: ");
+        System.out.println("Seinen to mangi skierowane do starszych czytelników,");
+        System.out.println("często z głębokimi emocjami, poważnymi tematami i dramatem.");
+        System.out.println("Znajdziesz tu historie z dojrzałą fabułą i mocnymi bohaterami.");
+    }
 }
 
